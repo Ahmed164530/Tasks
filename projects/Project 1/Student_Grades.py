@@ -1,7 +1,7 @@
 import csv
 import os
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog, simpledialog
 
 class Student:
     next_id = 1 
@@ -102,56 +102,46 @@ def view_student_grades():
     except ValueError:
         print("Invalid input. Please enter a number.")
 
-def update_student():
+def update_grades(student):
     try:
-        student_id = int(input("Enter the ID of the student to update: "))
-        student = find_student(student_id)
-        if student:
-            print("What would you like to update?")
-            print("1. Subject")
-            choice = input("Enter your choice: ")
-            if choice == "1":
-                subject_name = input("Enter the name of the subject to update: ")
-                if subject_name in student.subjects:
-                    print("What would you like to do")
-                    print("1. Update subject name")
-                    print("2. Update grades")
-                    print("3. Delete subject")
-                    choice = input("Enter your choice: ")
-                    if choice == "1":
-                        new_subject_name = input("Enter the new subject name: ")
-                        student.subjects[new_subject_name] = student.subjects.pop(subject_name)
-                        print("Subject name updated successfully.")
-                    elif choice == "2":
-                        print("Existing grades:", student.subjects[subject_name])
-                        num_grades = int(input("Enter the number of new grades: "))
-                        new_grades = []
-                        for i in range(num_grades):
-                            while True:
-                                try:
-                                    grade = int(input(f"Enter grade {i+1}: "))
-                                    if 0 <= grade <= 100:
-                                        new_grades.append(grade)
-                                        break
-                                    else:
-                                        print("Invalid grade. Grade must be between 0 and 100.")
-                                except ValueError:
-                                    print("Invalid input. Please enter a number.")
-                        student.subjects[subject_name] = new_grades
-                        print("Grades updated successfully.")
-                    elif choice == "3":
-                        del student.subjects[subject_name]
-                        print("Subject deleted successfully.")
+        
+        if not student:
+            messagebox.showerror("Error", "No student selected.")
+            return
+        
+        subject_name = simpledialog.askstring("Input", "Enter the subject name to update:")
+        if not subject_name:
+            messagebox.showwarning("Warning", "Subject name cannot be empty.")
+            return
+
+        if subject_name in student.subjects:
+            num_grades = simpledialog.askinteger("Input", "Enter the number of new grades:")
+            if num_grades is None or num_grades <= 0:
+                messagebox.showwarning("Warning", "Invalid number of grades.")
+                return
+
+            new_grades = []
+            for i in range(num_grades):
+                while True:
+                    grade = simpledialog.askinteger("Input", f"Enter new grade {i+1}:")
+                    if grade is None:
+                        break 
+                    if 0 <= grade <= 100:
+                        new_grades.append(grade)
+                        break
                     else:
-                        print("Invalid choice.")
-                else:
-                    print("Subject not found for this student.")
+                        messagebox.showerror("Error", "Grade must be between 0 and 100.")
+            
+            if new_grades:
+                student.subjects[subject_name] = new_grades
+                messagebox.showinfo("Success", "Grades updated successfully.")
             else:
-                print("Invalid choice.")
+                messagebox.showwarning("Warning", "No grades were entered.")
         else:
-            print("Student not found.")
-    except ValueError:
-        print("Invalid input. Please enter a number.")
+            messagebox.showerror("Error", f"Subject '{subject_name}' not found.")
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {str(e)}")
+
 
 def delete_student():
     try:
@@ -365,7 +355,6 @@ def view_student_grades_gui():
 
     grades_text = tk.Text(view_grades_window, wrap=tk.WORD, width=40, height=10)
     grades_text.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
-
 def update_student_gui():
     def update_student_details():
         try:
@@ -389,16 +378,15 @@ def update_student_gui():
                                 num_grades = int(num_new_grades_entry.get())
                                 new_grades = []
                                 for i in range(num_grades):
-                                    while True:
-                                        try:
-                                            grade = int(input(f"Enter new grade {i+1}: "))
-                                            if 0 <= grade <= 100:
-                                                new_grades.append(grade)
-                                                break
-                                            else:
-                                                print("Invalid grade. Grade must be between 0 and 100.")
-                                        except ValueError:
-                                            print("Invalid input. Please enter a number.")
+                                    grade = simpledialog.askinteger("Input", f"Enter new grade {i+1} (0-100):")
+                                    if grade is None:
+                                        messagebox.showerror("Error", "Grade input cancelled.")
+                                        return
+                                    if 0 <= grade <= 100:
+                                        new_grades.append(grade)
+                                    else:
+                                        messagebox.showerror("Error", "Grade must be between 0 and 100.")
+                                        return
                                 student.subjects[subject_name] = new_grades
                                 messagebox.showinfo("Success", "Grades updated successfully.")
                                 update_subject_window.destroy()
@@ -461,6 +449,101 @@ def update_student_gui():
 
     update_button = ttk.Button(update_student_window, text="Update Student", command=update_student_details)
     update_button.grid(row=2, column=0, columnspan=2, pady=10)
+# def update_student_gui():
+#     def update_student_details():
+#         try:
+#             student_id = int(student_id_entry.get())
+#             student = find_student(student_id)
+#             if student:
+#                 def update_subject():
+#                     subject_name = subject_name_entry.get()
+#                     if subject_name in student.subjects:
+#                         def update_subject_name():
+#                             new_subject_name = new_subject_name_entry.get()
+#                             if new_subject_name:
+#                                 student.subjects[new_subject_name] = student.subjects.pop(subject_name)
+#                                 messagebox.showinfo("Success", "Subject name updated successfully.")
+#                                 update_subject_window.destroy()
+#                             else:
+#                                 messagebox.showerror("Error", "Please enter a new subject name.")
+
+#                         def update_grades():
+#                             try:
+#                                 num_grades = int(num_new_grades_entry.get())
+#                                 new_grades = []
+#                                 for i in range(num_grades):
+#                                     while True:
+#                                         try:
+#                                             grade = int(input(f"Enter new grade {i+1}: "))
+#                                             if 0 <= grade <= 100:
+#                                                 new_grades.append(grade)
+#                                                 break
+#                                             else:
+#                                                 print("Invalid grade. Grade must be between 0 and 100.")
+#                                         except ValueError:
+#                                             print("Invalid input. Please enter a number.")
+#                                 student.subjects[subject_name] = new_grades
+#                                 messagebox.showinfo("Success", "Grades updated successfully.")
+#                                 update_subject_window.destroy()
+#                             except ValueError:
+#                                 messagebox.showerror("Error", "Invalid number of grades.")
+
+#                         def delete_subject():
+#                             del student.subjects[subject_name]
+#                             messagebox.showinfo("Success", "Subject deleted successfully.")
+#                             update_subject_window.destroy()
+
+#                         update_subject_window = tk.Toplevel(update_student_window)
+#                         update_subject_window.title("Update Subject")
+
+#                         update_choice_label = ttk.Label(update_subject_window, text="Choose an action:")
+#                         update_choice_label.grid(row=0, column=0, padx=5, pady=5)
+
+#                         update_name_button = ttk.Button(update_subject_window, text="Update Subject Name", command=update_subject_name)
+#                         update_name_button.grid(row=1, column=0, padx=5, pady=5)
+
+#                         update_grades_button = ttk.Button(update_subject_window, text="Update Grades", command=update_grades)
+#                         update_grades_button.grid(row=2, column=0, padx=5, pady=5)
+
+#                         delete_subject_button = ttk.Button(update_subject_window, text="Delete Subject", command=delete_subject)
+#                         delete_subject_button.grid(row=3, column=0, padx=5, pady=5)
+
+#                         new_subject_name_label = ttk.Label(update_subject_window, text="New Subject Name:")
+#                         new_subject_name_label.grid(row=4, column=0, padx=5, pady=5)
+
+#                         new_subject_name_entry = ttk.Entry(update_subject_window)
+#                         new_subject_name_entry.grid(row=4, column=1, padx=5, pady=5)
+
+#                         num_new_grades_label = ttk.Label(update_subject_window, text="Number of New Grades:")
+#                         num_new_grades_label.grid(row=5, column=0, padx=5, pady=5)
+
+#                         num_new_grades_entry = ttk.Entry(update_subject_window)
+#                         num_new_grades_entry.grid(row=5, column=1, padx=5, pady=5)
+#                     else:
+#                         messagebox.showerror("Error", "Subject not found for this student.")
+#                 update_subject()
+#             else:
+#                 messagebox.showerror("Error", "Student not found.")
+#         except ValueError:
+#             messagebox.showerror("Error", "Invalid student ID.")
+
+#     update_student_window = tk.Toplevel(root)
+#     update_student_window.title("Update Student")
+
+#     student_id_label = ttk.Label(update_student_window, text="Student ID:")
+#     student_id_label.grid(row=0, column=0, padx=5, pady=5)
+
+#     student_id_entry = ttk.Entry(update_student_window)
+#     student_id_entry.grid(row=0, column=1, padx=5, pady=5)
+
+#     subject_name_label = ttk.Label(update_student_window, text="Subject Name:")
+#     subject_name_label.grid(row=1, column=0, padx=5, pady=5)
+
+#     subject_name_entry = ttk.Entry(update_student_window)
+#     subject_name_entry.grid(row=1, column=1, padx=5, pady=5)
+
+#     update_button = ttk.Button(update_student_window, text="Update Student", command=update_student_details)
+#     update_button.grid(row=2, column=0, columnspan=2, pady=10)
 
 def delete_student_gui():
     def delete_student_from_dict():
